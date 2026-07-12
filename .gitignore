@@ -1,0 +1,22 @@
+# Node
+node_modules/
+dist/
+build/
+.env
+
+# Spring Boot / Maven
+backend/target/
+backend/*.iml
+backend/.idea/
+backend/.mvn/wrapper/maven-wrapper.jar
+backend/logs/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
