@@ -110,38 +110,10 @@ public class DataSeeder implements CommandLineRunner {
     private List<DoctorProfile> seedDoctors(List<Department> departments) {
         List<DoctorProfile> doctors = new ArrayList<>();
         
-        // Define exactly 4 standard profiles
-        String[] firstNames = {"Aarav", "Priya", "Vikram", "Sneha"};
-        String[] lastNames = {"Sharma", "Patel", "Reddy", "Iyer"};
-        String[] qualifications = {
-            "MBBS, MD (Internal Medicine) - Delhi University",
-            "MBBS, DCH (Pediatrics) - Mumbai University",
-            "MBBS, MS (Orthopedics) - Rajiv Gandhi University",
-            "MBBS, MD (Obstetrics & Gynecology) - Pune University"
-        };
-        String[] specializations = {
-            "General Physician",
-            "Pediatrician",
-            "Orthopedic Surgeon",
-            "Gynecologist"
-        };
-        String[] previousHospitals = {
-            "Fortis Hospital, Noida",
-            "Apollo Cradle, Bangalore",
-            "Lilavati Hospital, Mumbai",
-            "Ruby Hall Clinic, Pune"
-        };
-        String[] currentHospitals = {
-            "AIIMS New Delhi", 
-            "Max Super Speciality Hospital, Saket",
-            "Medanta - The Medicity, Gurugram", 
-            "Safdarjung Hospital, New Delhi"
-        };
-
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < numDoctors; i++) {
             User user = User.builder()
-                    .firstName(firstNames[i])
-                    .lastName(lastNames[i])
+                    .firstName(faker.name().firstName())
+                    .lastName(faker.name().lastName())
                     .email("doctor" + (i + 1) + "@hospital.com")
                     .password(passwordEncoder.encode("Doctor@123"))
                     .phone(faker.phoneNumber().cellPhone())
@@ -150,14 +122,13 @@ public class DataSeeder implements CommandLineRunner {
             user = userRepository.save(user);
 
             int exp = 5 + random.nextInt(10); // Normal experience 5 to 15 years
-            String achievements = "Consultant at " + currentHospitals[i] + ". " +
-                                  "Previous Experience: " + exp + " years at " + previousHospitals[i] + ".";
+            String achievements = "Consultant at Hospital. Previous Experience: " + exp + " years.";
 
             DoctorProfile profile = DoctorProfile.builder()
                     .user(user)
                     .department(departments.get(random.nextInt(departments.size())))
-                    .specialization(specializations[i])
-                    .qualification(qualifications[i])
+                    .specialization(faker.medical().diseaseName() + " Specialist")
+                    .qualification("MBBS, MD")
                     .experienceYears(exp) 
                     .consultationFee(500.0 + random.nextInt(500))
                     .biography(achievements)
@@ -198,21 +169,26 @@ public class DataSeeder implements CommandLineRunner {
     private List<AvailabilitySlot> seedAvailability(List<DoctorProfile> doctors) {
         List<AvailabilitySlot> slots = new ArrayList<>();
         LocalDate today = LocalDate.now();
+        int slotsCreated = 0;
+        
         for (DoctorProfile doctor : doctors) {
-            for (int i = 0; i < 30; i++) { // 30 days
+            for (int i = 0; i < 30; i++) { 
                 LocalDate date = today.plusDays(i);
                 if (date.getDayOfWeek().getValue() >= 6) continue; // Skip weekends
                 
                 LocalTime time = LocalTime.of(12, 0); // Start 12 PM
-                while (time.isBefore(LocalTime.of(18, 0))) { // Until 6 PM
+                while (time.isBefore(LocalTime.of(18, 0))) {
+                    if (slotsCreated >= 20) return slots;
+                    
                     AvailabilitySlot slot = AvailabilitySlot.builder()
                             .doctor(doctor)
                             .date(date)
                             .startTime(time)
                             .endTime(time.plusHours(1))
-                            .booked(random.nextDouble() > 0.7) // 30% chance of being pre-booked
+                            .booked(random.nextDouble() > 0.7)
                             .build();
                     slots.add(availabilitySlotRepository.save(slot));
+                    slotsCreated++;
                     time = time.plusHours(1);
                 }
             }
